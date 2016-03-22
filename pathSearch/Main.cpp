@@ -14,11 +14,7 @@ int main() {
 	planner.setEndPoint(39, 39, 90);
 	
 	cout << (planner.getStartPoint()).toString() << endl;
-	//cout << map.getMap() << endl;
 	vector<Point<int>> path = planner.getPath();
-	//cout << path << endl;
-	//cout << planner.fH.getMap() << endl;
-	//cout << planner.fG.getMap() << endl	
 	cv::namedWindow("MAP", 0);
 	cv::Mat m;
 	map.getMap().convertTo(m, CV_8U);
