@@ -9,6 +9,7 @@
 #include "Map.h"
 #include "Point.h"
 
+#define M_PI 3.14159265358979323846
 const int deltaNum = 3;
 
 class Planner {
@@ -22,7 +23,8 @@ public:
 	void setStartPoint(int _x, int _y, int _theta);
 	void setEndPoint(int _x, int _y, int _theta);
 public:
-	Map map, fH, fG;
+	Map map;
+	Map fH[360], fG[360];
 	Point<int> startPoint, endPoint;
 	std::set<Point<int>> openList, closeList;
 	void computeFunctionH();

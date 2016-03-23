@@ -16,6 +16,8 @@ public:
 	Point(cv::Point_<T> point, int _theta);
 	bool operator <(const Point<T>& other) const;
 	bool operator >(const Point<T>& other) const;
+	bool operator ==(const Point<T>& other) const;
+	bool operator !=(const Point<T>& other) const;
 	std::string toString() const;
 };
 #include "Point.tpp"

@@ -62,6 +62,16 @@ bool Point<T>::operator >(const Point<T>& other) const {
 }
 
 template <class T>
+bool Point<T>::operator ==(const Point<T>& other) const {
+	return i == other.i && j == other.j && theta == other.theta;
+}
+
+template <class T>
+bool Point<T>::operator !=(const Point<T>& other) const {
+	return i != other.i || j != other.j || theta != other.theta;
+}
+
+template <class T>
 std::string Point<T>::toString() const {
 	return "[" + std::to_string(i) + ", " + std::to_string(j) + ", " + std::to_string(theta) + "]";
 }
