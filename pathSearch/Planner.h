@@ -11,10 +11,11 @@
 
 #define M_PI 3.14159265358979323846
 const int deltaNum = 3;
-
+const int scale = 3;
 class Planner {
 public:
 	Planner(Map _map);
+	~Planner();
 	std::vector<Point<int>> getPath();
 	Point<int> getStartPoint();
 	Point<int> getEndPoint();
@@ -22,9 +23,11 @@ public:
 	void setEndPoint(Point<int> _endPoint);
 	void setStartPoint(int _x, int _y, int _theta);
 	void setEndPoint(int _x, int _y, int _theta);
-public:
-	Map map;
+public: // in fact shoule be private
+	Map map, rawMap;
 	Map fH[360], fG[360];
+	Point<int> ***mirror;
+	Point<int> miniStartPoint, miniEndPoint;
 	Point<int> startPoint, endPoint;
 	std::set<Point<int>> openList, closeList;
 	void computeFunctionH();
@@ -32,6 +35,7 @@ public:
 	Point<int> findMinValue(std::set<Point<int>> l);
 	std::map<Point<int>, Point<int>> prefix;
 	Point<int> transform(Point<int> currentPosition, int index);
+	Point<int> convertToMinimap(Point<int> _point);
 };
 
 #endif
