@@ -76,4 +76,9 @@ std::string Point<T>::toString() const {
 	return "[" + std::to_string(i) + ", " + std::to_string(j) + ", " + std::to_string(theta) + "]";
 }
 
+template <class T>
+double Point<T>::distance(Point<T>& other) {
+	return sqrt((i - other.i) * (i - other.i) + (j - other.j) * (j - other.j));
+}
+
 #endif

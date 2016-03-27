@@ -32,9 +32,9 @@ Planner::Planner(Map _rawMap) {
 			}
  		}
 	}
-	cv::namedWindow("tmp");
-	cv::imshow("tmp", map.getMap());
-	cv::waitKey();
+	//cv::namedWindow("tmp");
+	//cv::imshow("tmp", map.getMap());
+	//cv::waitKey();
 	mirror = new Point<int>**[miniHeight];
 	for (int i = 0; i < miniHeight; i++) {
 		mirror[i] = new Point<int>*[miniWidth];
@@ -71,15 +71,16 @@ std::vector<Point<int>> Planner::getPath() {
 		//std::cout << 'R' << mirror[currentPoint.i][currentPoint.j][currentPoint.theta].toString() << std::endl;
 		for (int i = 0; i < deltaNum; i++) {
 			double currentG = fG[currentPoint.theta].getPoint(currentPoint);
-			double newCost = 1;
 			Point<int> target = transform(mirror[currentPoint.i][currentPoint.j][currentPoint.theta], i);
 
-			if (target.theta != target.theta) {
-				newCost += 30;
-			}
+
 			Point<int> newPoint = convertToMinimap(target);
 			if (!map.isAvaliable(newPoint)) {
 				continue;
+			}
+			double newCost = currentPoint.distance(newPoint);
+			if (currentPoint.theta != target.theta) {
+				newCost *= 2;
 			}
 			//std::cout << 'N' << newPoint.toString() << std::endl;
 
@@ -101,11 +102,12 @@ std::vector<Point<int>> Planner::getPath() {
 			}
 		}
 		t++;
-		std::cout << t << std::endl;
+		//
 	}
+	std::cout << t << " nodes extended" << std::endl;
 	std::vector<Point<int>> path;
 	if (!openList.empty()) {
-		std::cout << fG[endPoint.theta].getPoint(miniEndPoint) << std::endl;
+		//std::cout << fG[endPoint.theta].getPoint(miniEndPoint) << std::endl;
 		Point<int> lastPoint = miniEndPoint;
 		while (lastPoint != miniStartPoint) {
 			//std::cout << lastPoint.toString() << std::endl;
@@ -162,14 +164,17 @@ void Planner::computeFunctionH() {
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
 			for (int theta = 0; theta < 360; theta++) {
-				fH[theta].setPoint(i, j, abs(miniEndPoint.i - i) + abs(miniEndPoint.j - j));
+				fH[theta].setPoint(i, j, miniEndPoint.distance(Point<int>(i, j)));
 			}
 		}
 	}
+	breadthFirstSearch();
 }
 
 double Planner::computeFunctionF(Point<int> point) {
-	return fG[point.theta].getPoint(point) + fH[point.theta].getPoint(point);
+	//return fG[point.theta].getPoint(point) + fH[point.theta].getPoint(point);
+	//std::cout << fG[point.theta].getPoint(point) << ' ' << fH2.getPoint(mirror[point.i][point.j][point.theta]) << std::endl;
+	return fG[point.theta].getPoint(point) + fH2.getPoint(mirror[point.i][point.j][point.theta]);
 }
 
 Point<int> Planner::findMinValue(std::set<Point<int>> l) {
@@ -186,7 +191,7 @@ Point<int> Planner::findMinValue(std::set<Point<int>> l) {
 }
 
 Point<int> Planner::transform(Point<int> currentPoint, int index) {
-	int transformArray[deltaNum][2] = { { 3, 0 }, { 0, -90 }, { 0, 90 } };
+	double transformArray[deltaNum][2] = { { 1.7, 0 }, { 2, -30 }, { 2, 30 } };
 	Point<int> newPoint;
 	//std::cout << transformArray[index][0] << ' ' << transformArray[index][1] << std::endl;
 	newPoint.theta = currentPoint.theta + transformArray[index][1];
@@ -199,4 +204,28 @@ Point<int> Planner::transform(Point<int> currentPoint, int index) {
 
 Point<int> Planner::convertToMinimap(Point<int> _point) {
 	return Point<int>(ceil(_point.i / scale * 1.0), ceil(_point.j / scale * 1.0), _point.theta);
+}
+
+void Planner::breadthFirstSearch() {
+	const int di[8] = { -1, -1, -1,  0, 0,  1, 1, 1 };
+	const int dj[8] = { -1,  0,  1, -1, 1, -1, 0, 1 };
+	std::list<Point<int>> queue;
+	queue.push_back(endPoint);
+	fH2 = Map(rawMap.getHeight(), rawMap.getWidth());
+	Map mark(rawMap.getHeight(), rawMap.getWidth(), CV_8UC1);
+	mark.setPoint(endPoint, 1);
+	while (!queue.empty()) {
+		Point<int> current = *queue.begin();
+		double currentCost = fH2.getPoint(current);
+		queue.pop_front();
+		for (int k = 0; k < 8; k++) {
+			int newI = current.i + di[k];
+			int newJ = current.j + dj[k];
+			if (rawMap.isAvaliable(Point<int>(newI, newJ)) && mark.getPoint(newI, newJ) < 1) {
+				queue.push_back(Point<int>(newI, newJ));
+				mark.setPoint(newI, newJ, 1);
+				fH2.setPoint(newI, newJ, currentCost + 1);
+			}
+		}
+	}
 }

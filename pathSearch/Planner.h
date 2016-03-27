@@ -11,7 +11,7 @@
 
 #define M_PI 3.14159265358979323846
 const int deltaNum = 3;
-const int scale = 3;
+const int scale = 2;
 class Planner {
 public:
 	Planner(Map _map);
@@ -26,6 +26,7 @@ public:
 public: // in fact shoule be private
 	Map map, rawMap;
 	Map fH[360], fG[360];
+	Map fH2;
 	Point<int> ***mirror;
 	Point<int> miniStartPoint, miniEndPoint;
 	Point<int> startPoint, endPoint;
@@ -36,6 +37,7 @@ public: // in fact shoule be private
 	std::map<Point<int>, Point<int>> prefix;
 	Point<int> transform(Point<int> currentPosition, int index);
 	Point<int> convertToMinimap(Point<int> _point);
+	void breadthFirstSearch();
 };
 
 #endif

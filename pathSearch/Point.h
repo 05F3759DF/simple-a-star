@@ -19,6 +19,7 @@ public:
 	bool operator ==(const Point<T>& other) const;
 	bool operator !=(const Point<T>& other) const;
 	std::string toString() const;
+	double distance(Point<T>& other);
 };
 #include "Point.tpp"
 
