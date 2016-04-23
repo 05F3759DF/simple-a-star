@@ -43,6 +43,9 @@ double Map::getPoint(int _i, int _j) {
 	} else if (map.type() == CV_8U) {
 		return ((uchar*)(map.data))[_i * width + _j];
 	}
+	else if (map.type() == CV_32S) {
+		return ((int*)(map.data))[_i * width + _j];
+	}
 }
 
 double Map::getPoint(Point<int> point) {
@@ -56,6 +59,9 @@ void Map::setPoint(int _i, int _j, double x) {
 		((float*)(map.data))[_i * width + _j] = x;
 	} else if (map.type() == CV_8U) {
 		((uchar*)(map.data))[_i * width + _j] = x;
+	}
+	else if (map.type() == CV_32S) {
+		((int*)(map.data))[_i * width + _j] = x;
 	}
 }
 

@@ -8,7 +8,7 @@
 #include <cmath>
 #include "Map.h"
 #include "Point.h"
-
+#include "Planning\PathGeneration\kelly_PG.h"
 #define M_PI 3.14159265358979323846
 const int deltaNum = 3;
 const int scale = 2;
@@ -23,6 +23,7 @@ public:
 	void setEndPoint(Point<int> _endPoint);
 	void setStartPoint(int _x, int _y, int _theta);
 	void setEndPoint(int _x, int _y, int _theta);
+	cv::Mat getVoronoiDiagram();
 public: // in fact shoule be private
 	Map map, rawMap;
 	Map fH[360], fG[360];
@@ -38,6 +39,10 @@ public: // in fact shoule be private
 	Point<int> transform(Point<int> currentPosition, int index);
 	Point<int> convertToMinimap(Point<int> _point);
 	void breadthFirstSearch();
+	void divideArea(int m, int n, int num);
+	Map dividedMap;
+	Map dividedColorMap;
+	PG_kelly planning;
 };
 
 #endif

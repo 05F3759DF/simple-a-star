@@ -32,9 +32,6 @@ Planner::Planner(Map _rawMap) {
 			}
  		}
 	}
-	//cv::namedWindow("tmp");
-	//cv::imshow("tmp", map.getMap());
-	//cv::waitKey();
 	mirror = new Point<int>**[miniHeight];
 	for (int i = 0; i < miniHeight; i++) {
 		mirror[i] = new Point<int>*[miniWidth];
@@ -59,11 +56,20 @@ Planner::~Planner() {
 std::vector<Point<int>> Planner::getPath() {
 	std::cout << miniStartPoint.toString() << "->" << miniEndPoint.toString() << std::endl;
 	int t = 0;
+	Point<int> pausePoint = miniEndPoint;
 	while (!openList.empty()) {
 		Point<int> currentPoint = findMinValue(openList);
 		if (currentPoint == miniEndPoint) {
 			break;
 		}
+		trajec_state start = { mirror[currentPoint.i][currentPoint.j][currentPoint.theta].i, mirror[currentPoint.i][currentPoint.j][currentPoint.theta].j, mirror[currentPoint.i][currentPoint.j][currentPoint.theta].theta / 180.0 * 3.14 };
+		trajec_state end = { endPoint.i, endPoint.j, endPoint.theta / 180.0 * 3.14 };
+		planning.Path_Generating(start, end);
+		if (planning.state_data.size() > 0) {
+			pausePoint = currentPoint;
+			break;
+		}
+		double dist = dividedMap.getPoint(currentPoint);
 		std::set<Point<int>>::iterator iter = openList.find(currentPoint);
 		openList.erase(iter);
 		closeList.insert(currentPoint);
@@ -78,11 +84,19 @@ std::vector<Point<int>> Planner::getPath() {
 			if (!map.isAvaliable(newPoint)) {
 				continue;
 			}
-			double newCost = currentPoint.distance(newPoint);
+			double length = currentPoint.distance(newPoint);
+			double newCost = length;
 			if (currentPoint.theta != target.theta) {
-				newCost *= 2;
+				newCost += length * 1.5;
+			}		
+		
+			if (dividedMap.getPoint(newPoint) < dist) {
+				newCost += length * 3;
 			}
-			//std::cout << 'N' << newPoint.toString() << std::endl;
+			else {
+				newCost -= length * 0.5;
+			}
+			std::cout << 'N' << newPoint.toString() << ' ' << target.toString() << std::endl;
 
 			std::set<Point<int>>::iterator closeIter = closeList.find(newPoint);
 			if (closeIter == closeList.end()) {
@@ -108,11 +122,15 @@ std::vector<Point<int>> Planner::getPath() {
 	std::vector<Point<int>> path;
 	if (!openList.empty()) {
 		//std::cout << fG[endPoint.theta].getPoint(miniEndPoint) << std::endl;
-		Point<int> lastPoint = miniEndPoint;
-		while (lastPoint != miniStartPoint) {
+		Point<int> lastPoint = pausePoint;
+		while (lastPoint != pausePoint) {
 			//std::cout << lastPoint.toString() << std::endl;
 			path.push_back(mirror[lastPoint.i][lastPoint.j][lastPoint.theta]);
 			lastPoint = prefix[lastPoint];
+		}
+		int dataSize = planning.state_data.size();
+		for (int i = dataSize - 1; i >= 0; i--) {
+			path.push_back(Point<int>(planning.state_data[i].x, planning.state_data[i].y, planning.state_data[i].theta / 3.14 * 180));
 		}
 		path.push_back(startPoint);
 	}
@@ -224,7 +242,106 @@ void Planner::breadthFirstSearch() {
 			if (rawMap.isAvaliable(Point<int>(newI, newJ)) && mark.getPoint(newI, newJ) < 1) {
 				queue.push_back(Point<int>(newI, newJ));
 				mark.setPoint(newI, newJ, 1);
-				fH2.setPoint(newI, newJ, currentCost + 1);
+				double dist = dividedMap.getPoint(newI, newJ);
+				if (dist > 5) {
+					fH2.setPoint(newI, newJ, currentCost + 1);
+				}
+				else {
+					fH2.setPoint(newI, newJ, currentCost + 2);
+				}
+			}
+		}
+	}
+}
+
+cv::Mat Planner::getVoronoiDiagram() {
+	std::list<Point<int>> queue;
+	int width = map.getWidth();
+	int height = map.getHeight(); 
+	dividedMap = Map(height, width, CV_32F);
+	dividedColorMap = Map(height, width, CV_32S);
+	const int di[8] = { -1, -1, -1, 0, 0, 1, 1, 1 };
+	const int dj[8] = { -1, 0, 1, -1, 1, -1, 0, 1 };
+	int areaNum = 0;
+	std::cout << height << ' ' << width << std::endl;
+
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			int state = map.getPoint(i, j);
+			if (state < 128) {
+				if (dividedColorMap.getPoint(i, j) == 0) {
+					areaNum++;
+					divideArea(i, j, areaNum);
+					/*std::cout << dividedColorMap.getMap() << std::endl;
+					std::cout << std::endl;*/
+				}
+			}
+			else {
+				dividedColorMap.setPoint(i, j, 0);
+			}
+		}
+	}
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			int state = map.getPoint(i, j);
+			if (state < 128) {
+				Point<int> p = Point<int>(i, j);
+				p.value = 0;
+				queue.push_back(p);
+				dividedMap.setPoint(i, j, 0);
+			}
+			else {
+				dividedMap.setPoint(i, j, -1);
+			}
+		}
+	}
+	while (!queue.empty()) {
+		Point<int> current = *queue.begin();
+		//std::cout << dividedColorMap.getMap() << std::endl;
+		int color = dividedColorMap.getPoint(current.i, current.j);
+		//std::cout << current.toString() << ' ' <<  color << std::endl;
+		queue.pop_front();
+		for (int k = 0; k < 8; k++) {
+			int newI = current.i + di[k];
+			int newJ = current.j + dj[k];
+			if (newI >= 0 && newJ >= 0 && newI < height && newJ < width) {
+				//std::cout << dividedMap.getPoint(newI, newJ) << std::endl;
+				if (dividedMap.getPoint(newI, newJ) == -1) {
+					dividedMap.setPoint(newI, newJ, current.value + 1);
+					dividedColorMap.setPoint(newI, newJ, color);
+					Point<int> p(newI, newJ);
+					p.value = current.value + 1;
+					queue.push_back(p);
+				}
+			}
+		}
+	}
+	cv::namedWindow("color", 1);
+	cv::Mat m = dividedColorMap.getMap();
+	m.convertTo(m, CV_8U);
+	cv::normalize(m, m, 255, 0, cv::NORM_MINMAX);
+	cv::imshow("color", m);
+	return dividedMap.getMap();
+}
+
+void Planner::divideArea(int i, int j, int num) {
+	std::list<Point<int>> queue;
+	const int di[8] = { -1, -1, -1, 0, 0, 1, 1, 1 };
+	const int dj[8] = { -1, 0, 1, -1, 1, -1, 0, 1 };
+	int width = map.getWidth();
+	int height = map.getHeight();
+	queue.push_back(Point<int>(i, j));
+	while (!queue.empty()) {
+		Point<int> current = *queue.begin();
+		queue.pop_front();
+		for (int k = 0; k < 8; k++) {
+			int newI = current.i + di[k];
+			int newJ = current.j + dj[k];
+			if (newI >= 0 && newJ >= 0 && newI < height && newJ < width) {
+				if (dividedColorMap.getPoint(newI, newJ) != num && map.getPoint(newI, newJ) < 128) {
+					dividedColorMap.setPoint(newI, newJ, num);
+					queue.push_back(Point<int>(newI, newJ));
+				}
 			}
 		}
 	}

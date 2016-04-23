@@ -13,6 +13,15 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="trajectory">
+      <UniqueIdentifier>{c153c9d9-4d27-4305-b69d-4a612a59be48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="trajectory\CD">
+      <UniqueIdentifier>{d1739d69-8e50-4ee9-8123-b3abaf5c8190}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="trajectory\PG">
+      <UniqueIdentifier>{8ada7272-2251-4a1c-b45e-e6bee65367d1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -27,6 +36,15 @@
     <ClCompile Include="Point.tpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Planning\CollisionDetect\CollisionDetect.cpp">
+      <Filter>trajectory\CD</Filter>
+    </ClCompile>
+    <ClCompile Include="Planning\PathGeneration\kelly_PG.cpp">
+      <Filter>trajectory\PG</Filter>
+    </ClCompile>
+    <ClCompile Include="Planning\PathGeneration\kelly_PG4Para.cpp">
+      <Filter>trajectory\PG</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Planner.h">
@@ -37,6 +55,12 @@
     </ClInclude>
     <ClInclude Include="Point.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Planning\CollisionDetect\CollisionDetect.h">
+      <Filter>trajectory\CD</Filter>
+    </ClInclude>
+    <ClInclude Include="Planning\PathGeneration\kelly_PG.h">
+      <Filter>trajectory\PG</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
